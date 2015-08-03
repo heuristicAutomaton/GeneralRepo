@@ -40,7 +40,7 @@
 
 from tkinter import *
 from tkinter.ttk import *
-from random import random
+from random import random, choice
 from time import time
 
 #@@@@@@@@@@@@@ I N I T I A L I S E R S @@@@@@@@@@@@@
@@ -56,13 +56,23 @@ frameA.pack()
 frameB = Frame(frameA)
 frameB.pack()
 
-# correct strings
-correct_strings =  ["lambda",
-                    "heroic",
-                    "legacy",
-                    "hyphen",
-                    "syntax",
-                    "teapot"]
+# generate random strings
+generate_random_strings = 'abcdefghijklmnopqrstuvwxyz'
+correct_strings = []
+for i in range(0, 6):
+    temp = ''
+    for j in range(0,6):
+        temp += choice(generate_random_strings)
+
+    correct_strings.append(temp)
+
+
+# correct_strings =  ["lambda",
+#                     "heroic",
+#                     "legacy",
+#                     "hyphen",
+#                     "syntax",
+#                     "teapot"]
 
 # keyboard layout
 board = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm']
@@ -84,6 +94,9 @@ entry.pack(side="left")
 # clearBtn = Button(frameB, text="Clear", command=lambda: btn_clear(data))
 # clearBtn.pack(side="left")
 
+# counts for use with the log fn
+counts = []
+
 # dynamic keyboard toggle
 toggleBtn = Checkbutton(frameB, text="Dynamic", command=lambda: btn_dynamic(IS_DYNAMIC))
 toggleBtn.pack()
@@ -93,8 +106,8 @@ baseKBFrame = Frame(frameA, relief=RAISED)
 
 
 #@@@@@@@@@@@@@@@@@@ M E T H O D S @@@@@@@@@@@@@@@@@@
-def btn_clear(data):
-    data.set("")
+# def btn_clear(data):
+#     data.set("")
 
 def btn_dynamic(toggle):
     global IS_DYNAMIC
@@ -126,6 +139,7 @@ def is_correct(word):
     global INDEX
     global STRING
     global IS_DYNAMIC
+    global start
 
     toggleBtn.config(state=DISABLED)
 
@@ -134,7 +148,10 @@ def is_correct(word):
         btn_dynamic(IS_DYNAMIC)
 
     if (INDEX < 6 and word == entry.get()):
-        if INDEX == 5: # go to next sequence
+        total_time = (time() - start) * 1000
+        log(total_time, word)
+        start = time() # restart clock
+        if INDEX == 5: # if end of the word, go to next
             INDEX = 0
             STRING += 1
             if STRING != 6:
@@ -142,22 +159,26 @@ def is_correct(word):
             else:
                 window.destroy()
             
-        elif STRING != 6 and word == entry.get(): # always check to make sure user has correct input
+        elif word == entry.get(): # else keep incrementing
             INDEX += 1
             data.set(correct_strings[STRING][INDEX]) 
 
 
-def log(word, time):
+def log(time, word):
     global IS_DYNAMIC
+    global counts
+
+    static = ''
+
+    counts.append(word)
 
     if IS_DYNAMIC:
-        static = "static"
-    else:
         static = "dynamic"
+    else:
+        static = "static"
 
-
-
-
+    file = open("experiment_" + static + "_log.txt", 'a')
+    file.write("Sam " + static + " " + word + " " + str(counts.count(word)) + " " + str(round(time, 1)) + "\n")
 
 
 
@@ -176,7 +197,7 @@ def create_keys():
 
 create_keys()
 
-total_time = (time() - start) * 1000
-print(total_time)
+start = time()
+
 # start app
 window.mainloop()
